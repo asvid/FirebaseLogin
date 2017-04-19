@@ -24,6 +24,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import io.reactivex.subjects.PublishSubject
 import kotlin.properties.Delegates
@@ -31,10 +32,9 @@ import kotlin.properties.Delegates
 
 object UserLoginService {
 
-  val GOOGLE_LOGIN_CODE = 123
+  private val GOOGLE_LOGIN_CODE = 123
   private var wasInitialized: Boolean = false
   private var defaultWebClientId: String? = null
-
   private val auth: FirebaseAuth = FirebaseAuth.getInstance()
   private var facebookListener: FirebaseAuth.AuthStateListener by Delegates.notNull()
   private var gso: GoogleSignInOptions by Delegates.notNull()
@@ -188,5 +188,10 @@ object UserLoginService {
     auth.signInAnonymously().addOnCompleteListener { task ->
       loginTask(task)
     }
+  }
+
+  fun getUser(): FirebaseUser? {
+    checkInit()
+    return auth.currentUser
   }
 }
