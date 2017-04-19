@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+  <android.support.design.widget.TextInputLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:hint="email"
+      app:hintEnabled="true"
+      >
+
+    <EditText
+        android:id="@+id/email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ems="10"
+        android:inputType="textEmailAddress"
+        />
+  </android.support.design.widget.TextInputLayout>
+
+  <android.support.design.widget.TextInputLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:hint="password"
+      app:hintEnabled="true"
+      app:passwordToggleEnabled="true"
+      >
+
+    <EditText
+        android:id="@+id/password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPassword"
+        />
+  </android.support.design.widget.TextInputLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:orientation="horizontal"
+      >
+
+    <Button
+        android:id="@+id/loginWithEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="login"
+        style="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="or"
+        />
+
+    <Button
+        android:id="@+id/createAccount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="create account"
+        style="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog"
+        />
+
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:orientation="horizontal"
+      >
+
+    <Button
+        android:id="@+id/googleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:padding="10dp"
+        android:text="{google login"
+        />
+
+    <Button
+        android:id="@+id/btn_fb_login"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:padding="10dp"
+        android:text="facebook login"
+        />
+
+  </LinearLayout>
+  <Button
+      android:id="@+id/annonymousLogin"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:layout_gravity="center"
+      android:text="login annonymous"
+      style="@style/Base.Widget.AppCompat.Button.Borderless.Colored"
+      />
+
+</LinearLayout>

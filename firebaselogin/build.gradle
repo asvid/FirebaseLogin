@@ -1,0 +1,72 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'kotlin-android'
+
+ext {
+  kotlin_version = '1.1.1'
+  buildToolsVersion = "25.3.1"
+  supportLibVersion = "25.3.1"
+  runnerVersion = "0.5"
+  rulesVersion = "0.5"
+  espressoVersion = "2.2.2"
+  google_services_version = '10.2.1'
+  compileSdkVersion = 25
+  buildToolsVersion = '25'
+  minSdkVersion = 16
+  targetSdkVersion = 25
+}
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
+  }
+}
+
+group = 'asvid.firebaselogin'
+version = '0.0.1'
+
+android {
+  //  defaultPublishConfig "debug"
+
+  defaultConfig {
+    minSdkVersion 16
+    targetSdkVersion 25
+    buildToolsVersion = "25"
+    compileSdkVersion = 25
+    versionCode 1
+    versionName "1.0"
+
+    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    }
+  }
+}
+
+dependencies {
+  compile fileTree(dir: 'libs', include: ['*.jar'])
+  compile 'com.google.firebase:firebase-core:' + google_services_version
+  compile 'com.google.firebase:firebase-auth:' + google_services_version
+  compile 'com.firebaseui:firebase-ui-auth:1.2.0'
+  compile 'com.google.android.gms:play-services-auth:' + google_services_version
+  compile 'org.jetbrains.kotlin:kotlin-stdlib:' + kotlin_version
+  compile 'io.reactivex.rxjava2:rxjava:2.0.8'
+
+
+
+  androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    exclude group: 'com.android.support', module: 'support-annotations'
+  })
+  compile 'com.android.support:appcompat-v7:25.3.1'
+  testCompile 'junit:junit:4.12'
+}
+
+repositories {
+  mavenCentral()
+}
