@@ -4,8 +4,6 @@ apply plugin: 'kotlin-android'
 
 ext {
   kotlin_version = '1.1.1'
-  buildToolsVersion = "25.3.1"
-  supportLibVersion = "25.3.1"
   runnerVersion = "0.5"
   rulesVersion = "0.5"
   espressoVersion = "2.2.2"
@@ -26,10 +24,10 @@ buildscript {
 }
 
 group = 'asvid.firebaselogin'
-version = '0.0.1'
+version = '0.0.3'
 
 android {
-  //  defaultPublishConfig "debug"
+  defaultPublishConfig "debug"
 
   defaultConfig {
     minSdkVersion 16
@@ -58,12 +56,9 @@ dependencies {
   compile 'org.jetbrains.kotlin:kotlin-stdlib:' + kotlin_version
   compile 'io.reactivex.rxjava2:rxjava:2.0.8'
 
-
-
   androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
     exclude group: 'com.android.support', module: 'support-annotations'
   })
-  compile 'com.android.support:appcompat-v7:25.3.1'
   testCompile 'junit:junit:4.12'
 }
 

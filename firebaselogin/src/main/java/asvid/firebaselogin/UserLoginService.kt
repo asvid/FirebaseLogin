@@ -29,9 +29,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 import io.reactivex.subjects.PublishSubject
 import kotlin.properties.Delegates
 
-
 object UserLoginService {
-
   private val GOOGLE_LOGIN_CODE = 123
   private var wasInitialized: Boolean = false
   private var defaultWebClientId: String? = null
@@ -41,9 +39,11 @@ object UserLoginService {
   private val callbackManager: CallbackManager = CallbackManager.Factory.create()
   private var mGoogleApiClient: GoogleApiClient by Delegates.notNull()
   val observable = PublishSubject.create<Any>()!!
+  private var ctx: Context by Delegates.notNull()
 
   fun initWith(context: Context, default_web_client_id: String) {
     defaultWebClientId = default_web_client_id
+    ctx = context
     initGoogle(context)
     initFacebook()
     setFacebookListener()
@@ -51,7 +51,6 @@ object UserLoginService {
     wasInitialized = true
     Logger.d("current user: ${auth.currentUser?.photoUrl}")
   }
-
 
   private fun initGoogle(context: Context) {
     gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -75,9 +74,7 @@ object UserLoginService {
       override fun onConnectionSuspended(p0: Int) {
         Logger.d("google onConnectionSuspended: $p0")
       }
-
     })
-
   }
 
   private fun initFacebook() {
