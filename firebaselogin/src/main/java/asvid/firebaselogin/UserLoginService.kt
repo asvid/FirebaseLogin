@@ -1,14 +1,15 @@
-package com.aswiderski.frigo.data
+package asvid.firebaselogin
 
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
-import asvid.firebaselogin.Logger
-import asvid.firebaselogin.NotInitializedException
+import asvid.firebaselogin.exceptions.NotInitializedException
+import asvid.firebaselogin.exceptions.WrongPassword
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
+import com.facebook.CallbackManager.Factory
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
@@ -16,13 +17,17 @@ import com.facebook.login.LoginResult
 import com.firebase.ui.auth.ResultCodes
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder
 import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuth.AuthStateListener
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -34,11 +39,11 @@ object UserLoginService {
   private var wasInitialized: Boolean = false
   private var defaultWebClientId: String? = null
   private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-  private var facebookListener: FirebaseAuth.AuthStateListener by Delegates.notNull()
+  private var facebookListener: AuthStateListener by Delegates.notNull()
   private var gso: GoogleSignInOptions by Delegates.notNull()
-  private val callbackManager: CallbackManager = CallbackManager.Factory.create()
+  private val callbackManager: CallbackManager = Factory.create()
   private var mGoogleApiClient: GoogleApiClient by Delegates.notNull()
-  val observable = PublishSubject.create<Any>()!!
+  val observable = PublishSubject.create<Pair<Any?, Throwable?>>()!!
   private var ctx: Context by Delegates.notNull()
 
   fun initWith(context: Context, default_web_client_id: String) {
@@ -53,7 +58,7 @@ object UserLoginService {
   }
 
   private fun initGoogle(context: Context) {
-    gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+    gso = Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
         .requestIdToken(defaultWebClientId)
         .requestEmail()
         .build()
@@ -66,7 +71,7 @@ object UserLoginService {
         .build()
 
     mGoogleApiClient.connect()
-    mGoogleApiClient.registerConnectionCallbacks(object : GoogleApiClient.ConnectionCallbacks {
+    mGoogleApiClient.registerConnectionCallbacks(object : ConnectionCallbacks {
       override fun onConnected(p0: Bundle?) {
         Logger.d("google onConnected: $p0")
       }
@@ -95,14 +100,14 @@ object UserLoginService {
   }
 
   private fun setFacebookListener() {
-    facebookListener = FirebaseAuth.AuthStateListener {
+    facebookListener = AuthStateListener {
       //      TODO
     }
     auth.addAuthStateListener { facebookListener }
   }
 
   fun loginWithGoogle(activity: Activity) {
-    checkInit()
+    logout()
     val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
     activity.startActivityForResult(signInIntent, GOOGLE_LOGIN_CODE)
   }
@@ -114,6 +119,7 @@ object UserLoginService {
   fun logout() {
     checkInit()
     LoginManager.getInstance().logOut()
+    auth.signOut()
   }
 
   private fun handleFacebookAccessToken(token: AccessToken) {
@@ -130,6 +136,11 @@ object UserLoginService {
 
   private fun signWithCredential(credential: AuthCredential) {
     val user = auth.currentUser
+    Logger.d("user name: ${user?.displayName}")
+    Logger.d("user is annonymous: ${user?.isAnonymous}")
+    Logger.d("user providers: ${user?.providers}")
+    Logger.d("current provider: ${credential.provider}")
+
     if (user != null && !user.providers?.contains(credential.provider)!!) {
       user.linkWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
@@ -139,6 +150,7 @@ object UserLoginService {
         loginTask(task)
       }
     }
+
   }
 
   private fun loginTask(
@@ -147,7 +159,7 @@ object UserLoginService {
       observable.onError(Throwable("couldn't log to account ${task.exception}"))
       Logger.d("loginTask couldn't log to account")
     } else {
-      observable.onNext("logging succesful")
+      observable.onNext(Pair("logging succesful", null))
       Logger.d("loginTask logging succesful")
     }
   }
@@ -162,7 +174,7 @@ object UserLoginService {
   }
 
   fun createAccount(email: String, password: String) {
-    checkInit()
+    logout()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
       loginTask(task)
@@ -170,18 +182,25 @@ object UserLoginService {
   }
 
   fun loginWithEmail(email: String, password: String) {
-    checkInit()
+    logout()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-      if (!task.isSuccessful && task.exception is FirebaseAuthUserCollisionException) {
-        val credential = EmailAuthProvider.getCredential(email, password)
-        signWithCredential(credential)
+      if (!task.isSuccessful) {
+        when (task.exception) {
+          is FirebaseAuthUserCollisionException -> {
+            val credential = EmailAuthProvider.getCredential(email, password)
+            signWithCredential(credential)
+          }
+          is FirebaseAuthInvalidCredentialsException -> {
+            observable.onNext(Pair(null, WrongPassword()))
+          }
+        }
       }
     }
   }
 
   fun loginAnnonymously() {
-    checkInit()
+    logout()
     auth.signInAnonymously().addOnCompleteListener { task ->
       loginTask(task)
     }
