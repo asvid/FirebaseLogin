@@ -27,7 +27,7 @@ group = 'asvid.firebaselogin'
 version = '0.0.8'
 
 android {
-  defaultPublishConfig "debug"
+  //  defaultPublishConfig "debug"
 
   defaultConfig {
     minSdkVersion 16
