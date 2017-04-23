@@ -5,13 +5,18 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
-import asvid.firebaselogin.exceptions.WrongPassword
 import asvid.firebaselogin.UserLoginService
+import asvid.firebaselogin.exceptions.EmailAlreadyUsed
+import asvid.firebaselogin.exceptions.UserLoggedOut
+import asvid.firebaselogin.exceptions.WrongPassword
+import com.bumptech.glide.Glide
 import com.facebook.login.LoginManager
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.annonymousLogin
+import kotlinx.android.synthetic.main.activity_main.avatarImage
 import kotlinx.android.synthetic.main.activity_main.btn_fb_login
 import kotlinx.android.synthetic.main.activity_main.createAccount
+import kotlinx.android.synthetic.main.activity_main.displayNameTextView
 import kotlinx.android.synthetic.main.activity_main.email
 import kotlinx.android.synthetic.main.activity_main.googleButton
 import kotlinx.android.synthetic.main.activity_main.loginWithEmail
@@ -57,23 +62,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     UserLoginService.logout()
+
+    setUserData()
+  }
+
+  private fun setUserData() {
+    val user = UserLoginService.getUser()
+    Glide.with(this)
+        .load(user?.photoUrl)
+        .centerCrop()
+        .placeholder(R.mipmap.ic_launcher)
+        .dontAnimate()
+        .into(avatarImage)
+
+    if (user != null) {
+      displayNameTextView.text = user.displayName
+    } else {
+      displayNameTextView.text = "John Doe"
+    }
   }
 
   private fun doOnError(onError: Throwable) {
     Log.e("ERROR", onError.toString())
     Toast.makeText(this, "something went wrong", Toast.LENGTH_LONG).show()
 
-    subscription.dispose()
-    createSubscription()
+    setUserData()
   }
 
   private fun doOnNext(onNext: Pair<Any?, Throwable?>) {
     val second = onNext.second
     if (second != null) {
       when (second) {
-        is WrongPassword -> Toast.makeText(this, "Wrong password", Toast.LENGTH_LONG).show()
+        is WrongPassword -> showErrorToast(second)
+        is EmailAlreadyUsed -> showErrorToast(second)
+        is UserLoggedOut -> showErrorToast(second)
       }
     } else Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
+
+    setUserData()
+  }
+
+  private fun showErrorToast(second: Throwable) {
+    Toast.makeText(this, second.message, Toast.LENGTH_LONG).show()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {

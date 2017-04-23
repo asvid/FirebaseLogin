@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import asvid.firebaselogin.exceptions.EmailAlreadyUsed
 import asvid.firebaselogin.exceptions.NotInitializedException
+import asvid.firebaselogin.exceptions.UserLoggedOut
 import asvid.firebaselogin.exceptions.WrongPassword
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
@@ -107,7 +109,7 @@ object UserLoginService {
   }
 
   fun loginWithGoogle(activity: Activity) {
-    logout()
+    checkInit()
     val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
     activity.startActivityForResult(signInIntent, GOOGLE_LOGIN_CODE)
   }
@@ -120,6 +122,7 @@ object UserLoginService {
     checkInit()
     LoginManager.getInstance().logOut()
     auth.signOut()
+    observable.onNext(Pair(null, UserLoggedOut()))
   }
 
   private fun handleFacebookAccessToken(token: AccessToken) {
@@ -156,7 +159,9 @@ object UserLoginService {
   private fun loginTask(
       task: Task<AuthResult>) {
     if (!task.isSuccessful) {
-      observable.onError(Throwable("couldn't log to account ${task.exception}"))
+      when (task.exception) {
+        is FirebaseAuthUserCollisionException -> observable.onNext(Pair(null, EmailAlreadyUsed()))
+      }
       Logger.d("loginTask couldn't log to account")
     } else {
       observable.onNext(Pair("logging succesful", null))
@@ -174,29 +179,44 @@ object UserLoginService {
   }
 
   fun createAccount(email: String, password: String) {
-    logout()
+    checkInit()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-      loginTask(task)
+      if (!task.isSuccessful) {
+        if (task.exception is FirebaseAuthUserCollisionException) {
+          handleCreateEmailAccountError(email, password)
+        }
+      } else loginTask(task)
     }
   }
 
+  private fun handleCreateEmailAccountError(email: String, password: String) {
+    val currentUser = auth.currentUser
+    if (currentUser != null) {
+      val credential = EmailAuthProvider.getCredential(email, password)
+      currentUser.linkWithCredential(credential).addOnCompleteListener { task ->
+        loginTask(task)
+      }
+    } else observable.onNext(Pair(null, EmailAlreadyUsed()))
+  }
+
   fun loginWithEmail(email: String, password: String) {
-    logout()
+    checkInit()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
       if (!task.isSuccessful) {
         when (task.exception) {
-          is FirebaseAuthUserCollisionException -> {
-            val credential = EmailAuthProvider.getCredential(email, password)
-            signWithCredential(credential)
-          }
-          is FirebaseAuthInvalidCredentialsException -> {
-            observable.onNext(Pair(null, WrongPassword()))
-          }
+          is FirebaseAuthUserCollisionException -> getCredentialAndLogin(email, password)
+          is FirebaseAuthInvalidCredentialsException -> observable.onNext(
+              Pair(null, WrongPassword()))
         }
       }
     }
+  }
+
+  private fun getCredentialAndLogin(email: String, password: String) {
+    val credential = EmailAuthProvider.getCredential(email, password)
+    signWithCredential(credential)
   }
 
   fun loginAnnonymously() {
