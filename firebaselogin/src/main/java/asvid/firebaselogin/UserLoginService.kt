@@ -150,7 +150,7 @@ object UserLoginService {
     Logger.d("user providers: ${user?.providers}")
     Logger.d("current provider: ${credential.provider}")
 
-    if (user != null && !user.providers?.contains(credential.provider)!!) {
+    if (user != null && !user.isAnonymous && !user.providers?.contains(credential.provider)!!) {
       user.linkWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
       }
@@ -226,7 +226,7 @@ object UserLoginService {
   }
 
   fun loginAnnonymously() {
-    logout()
+    checkInit()
     auth.signInAnonymously().addOnCompleteListener { task ->
       loginTask(task)
     }
