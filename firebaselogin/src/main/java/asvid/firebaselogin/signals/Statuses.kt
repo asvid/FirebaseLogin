@@ -1,4 +1,4 @@
-package asvid.firebaselogin.exceptions
+package asvid.firebaselogin.signals
 
 abstract class Status
 class UserLogged : Status()
