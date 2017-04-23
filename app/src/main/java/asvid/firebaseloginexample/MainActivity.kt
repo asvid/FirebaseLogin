@@ -6,12 +6,13 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import asvid.firebaselogin.UserLoginService
-import asvid.firebaselogin.exceptions.AccountCreated
-import asvid.firebaselogin.exceptions.EmailAlreadyUsed
-import asvid.firebaselogin.exceptions.UserLogged
-import asvid.firebaselogin.exceptions.UserLoggedOut
-import asvid.firebaselogin.exceptions.WeakPassword
-import asvid.firebaselogin.exceptions.WrongPassword
+import asvid.firebaselogin.signals.AccountCreated
+import asvid.firebaselogin.signals.EmailAlreadyUsed
+import asvid.firebaselogin.signals.Signal
+import asvid.firebaselogin.signals.UserLogged
+import asvid.firebaselogin.signals.UserLoggedOut
+import asvid.firebaselogin.signals.WeakPassword
+import asvid.firebaselogin.signals.WrongPassword
 import com.bumptech.glide.Glide
 import com.facebook.login.LoginManager
 import io.reactivex.disposables.Disposable
@@ -57,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     annonymousLogin.setOnClickListener {
-      UserLoginService.loginAnnonymously()
+      UserLoginService.loginAnonymously()
     }
 
     logoutButton.setOnClickListener {
@@ -88,33 +89,29 @@ class MainActivity : AppCompatActivity() {
   private fun doOnError(onError: Throwable) {
     Log.e("ERROR", onError.toString())
     Toast.makeText(this, "something went wrong", Toast.LENGTH_LONG).show()
-
     setUserData()
   }
 
-  private fun doOnNext(onNext: Pair<Any?, Throwable?>) {
-    val second = onNext.second
-    val first = onNext.first
-    if (second != null) {
-      when (second) {
-        is WrongPassword -> showErrorToast(second)
-        is EmailAlreadyUsed -> showErrorToast(second)
-        is WeakPassword -> showErrorToast(second)
+  private fun doOnNext(signal: Signal) {
+    if (signal.isError()) {
+      when (signal.error) {
+        is WrongPassword -> showErrorToast(signal.error)
+        is EmailAlreadyUsed -> showErrorToast(signal.error)
+        is WeakPassword -> showErrorToast(signal.error)
       }
     } else {
-      when (first) {
+      when (signal.status) {
         is UserLogged -> Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
         is AccountCreated -> Toast.makeText(this, "account created", Toast.LENGTH_LONG).show()
         is UserLoggedOut -> Toast.makeText(this, "user logged out", Toast.LENGTH_LONG).show()
       }
 
     }
-
     setUserData()
   }
 
-  private fun showErrorToast(second: Throwable) {
-    Toast.makeText(this, second.message, Toast.LENGTH_LONG).show()
+  private fun showErrorToast(error: Error) {
+    Toast.makeText(this, error.message, Toast.LENGTH_LONG).show()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
