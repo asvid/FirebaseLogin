@@ -5,9 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import asvid.firebaselogin.exceptions.AccountCreated
 import asvid.firebaselogin.exceptions.EmailAlreadyUsed
 import asvid.firebaselogin.exceptions.NotInitializedException
+import asvid.firebaselogin.exceptions.Status
+import asvid.firebaselogin.exceptions.UserLogged
 import asvid.firebaselogin.exceptions.UserLoggedOut
+import asvid.firebaselogin.exceptions.WeakPassword
 import asvid.firebaselogin.exceptions.WrongPassword
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
@@ -23,6 +27,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.common.api.GoogleApiClient.ConnectionCallbacks
 import com.google.android.gms.tasks.Task
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.EmailAuthProvider
@@ -31,6 +36,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuth.AuthStateListener
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import io.reactivex.subjects.PublishSubject
@@ -45,7 +51,7 @@ object UserLoginService {
   private var gso: GoogleSignInOptions by Delegates.notNull()
   private val callbackManager: CallbackManager = Factory.create()
   private var mGoogleApiClient: GoogleApiClient by Delegates.notNull()
-  val observable = PublishSubject.create<Pair<Any?, Throwable?>>()!!
+  val observable = PublishSubject.create<Pair<Status?, Throwable?>>()!!
   private var ctx: Context by Delegates.notNull()
 
   fun initWith(context: Context, default_web_client_id: String) {
@@ -122,7 +128,7 @@ object UserLoginService {
     checkInit()
     LoginManager.getInstance().logOut()
     auth.signOut()
-    observable.onNext(Pair(null, UserLoggedOut()))
+    observable.onNext(Pair(UserLoggedOut(), null))
   }
 
   private fun handleFacebookAccessToken(token: AccessToken) {
@@ -161,10 +167,11 @@ object UserLoginService {
     if (!task.isSuccessful) {
       when (task.exception) {
         is FirebaseAuthUserCollisionException -> observable.onNext(Pair(null, EmailAlreadyUsed()))
+        is FirebaseAuthInvalidCredentialsException -> observable.onNext(Pair(null, WrongPassword()))
       }
       Logger.d("loginTask couldn't log to account")
     } else {
-      observable.onNext(Pair("logging succesful", null))
+      observable.onNext(Pair(UserLogged(), null))
       Logger.d("loginTask logging succesful")
     }
   }
@@ -182,17 +189,27 @@ object UserLoginService {
     checkInit()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+      Logger.d("creating finished ${task.isSuccessful}")
       if (!task.isSuccessful) {
-        if (task.exception is FirebaseAuthUserCollisionException) {
-          handleCreateEmailAccountError(email, password)
+        Logger.d("creating finished ${task.exception}")
+        when (task.exception) {
+          is FirebaseAuthUserCollisionException -> handleCreateEmailAccountError(email, password)
+          is FirebaseAuthWeakPasswordException -> observable.onNext(Pair(null, WeakPassword()))
+          else -> handleError(task.exception as FirebaseException)
         }
-      } else loginTask(task)
+      } else observable.onNext(Pair(AccountCreated(), null))
     }
+  }
+
+  private fun handleError(exception: FirebaseException) {
+    val reason = exception.message!!
+    Logger.d("${exception.message}")
+    if (reason.contains("WEAK_PASSWORD")) observable.onNext(Pair(null, WeakPassword()))
   }
 
   private fun handleCreateEmailAccountError(email: String, password: String) {
     val currentUser = auth.currentUser
-    if (currentUser != null) {
+    if (currentUser != null && !currentUser.providers!!.contains(EmailAuthProvider.PROVIDER_ID)) {
       val credential = EmailAuthProvider.getCredential(email, password)
       currentUser.linkWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
@@ -204,19 +221,8 @@ object UserLoginService {
     checkInit()
     if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
     auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-      if (!task.isSuccessful) {
-        when (task.exception) {
-          is FirebaseAuthUserCollisionException -> getCredentialAndLogin(email, password)
-          is FirebaseAuthInvalidCredentialsException -> observable.onNext(
-              Pair(null, WrongPassword()))
-        }
-      }
+      loginTask(task)
     }
-  }
-
-  private fun getCredentialAndLogin(email: String, password: String) {
-    val credential = EmailAuthProvider.getCredential(email, password)
-    signWithCredential(credential)
   }
 
   fun loginAnnonymously() {

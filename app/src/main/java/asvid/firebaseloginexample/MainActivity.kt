@@ -6,8 +6,11 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.widget.Toast
 import asvid.firebaselogin.UserLoginService
+import asvid.firebaselogin.exceptions.AccountCreated
 import asvid.firebaselogin.exceptions.EmailAlreadyUsed
+import asvid.firebaselogin.exceptions.UserLogged
 import asvid.firebaselogin.exceptions.UserLoggedOut
+import asvid.firebaselogin.exceptions.WeakPassword
 import asvid.firebaselogin.exceptions.WrongPassword
 import com.bumptech.glide.Glide
 import com.facebook.login.LoginManager
@@ -91,13 +94,21 @@ class MainActivity : AppCompatActivity() {
 
   private fun doOnNext(onNext: Pair<Any?, Throwable?>) {
     val second = onNext.second
+    val first = onNext.first
     if (second != null) {
       when (second) {
         is WrongPassword -> showErrorToast(second)
         is EmailAlreadyUsed -> showErrorToast(second)
-        is UserLoggedOut -> showErrorToast(second)
+        is WeakPassword -> showErrorToast(second)
       }
-    } else Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
+    } else {
+      when (first) {
+        is UserLogged -> Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
+        is AccountCreated -> Toast.makeText(this, "account created", Toast.LENGTH_LONG).show()
+        is UserLoggedOut -> Toast.makeText(this, "user logged out", Toast.LENGTH_LONG).show()
+      }
+
+    }
 
     setUserData()
   }
