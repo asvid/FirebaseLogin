@@ -17,15 +17,21 @@ You need to have properly configured Firebase, which means:
   - facebook - https://firebase.google.com/docs/auth/android/facebook-login
   - anonymous
 
-in app manifest just add
+In app manifest add
 
 ```xml
     <meta-data
         android:name="com.facebook.sdk.ApplicationId"
         android:value="@string/facebook_application_id"/>
 ```
-
-
+And create XML file in *values* folder containing
+<?xml version="1.0" encoding="utf-8"?>
+```xml
+<resources>
+  <string name="facebook_application_id" translatable="false">1808813719132692</string>
+  <string name="facebook_login_protocol_scheme" translatable="false">fb1808813719132692</string>
+</resources>
+```
 in yout project build.gradle add
 ```groovy
 dependencies {
