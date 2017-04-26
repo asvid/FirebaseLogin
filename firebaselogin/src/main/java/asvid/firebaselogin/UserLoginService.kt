@@ -20,7 +20,6 @@ import com.facebook.FacebookCallback
 import com.facebook.FacebookException
 import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
-import com.firebase.ui.auth.ResultCodes
 import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions.Builder
@@ -45,6 +44,7 @@ import kotlin.properties.Delegates
 
 object UserLoginService {
   private val GOOGLE_LOGIN_CODE = 123
+  val OK = -1
   private var wasInitialized: Boolean = false
   private var defaultWebClientId: String? = null
   private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -195,7 +195,7 @@ object UserLoginService {
   fun handleActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
     checkInit()
     if (requestCode == GOOGLE_LOGIN_CODE) {
-      (resultCode == ResultCodes.OK).let { handleGoogleLogin(data) }
+      (resultCode == OK).let { handleGoogleLogin(data) }
     } else {
       callbackManager.onActivityResult(requestCode, resultCode, data)
     }
