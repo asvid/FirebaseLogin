@@ -15,7 +15,6 @@ import asvid.firebaselogin.signals.UserLoggedOut
 import asvid.firebaselogin.signals.WeakPassword
 import asvid.firebaselogin.signals.WrongPassword
 import com.bumptech.glide.Glide
-import com.facebook.login.LoginManager
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.annonymousLogin
 import kotlinx.android.synthetic.main.activity_main.avatarImage
@@ -27,7 +26,6 @@ import kotlinx.android.synthetic.main.activity_main.googleButton
 import kotlinx.android.synthetic.main.activity_main.loginWithEmail
 import kotlinx.android.synthetic.main.activity_main.logoutButton
 import kotlinx.android.synthetic.main.activity_main.password
-import java.util.Arrays
 import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity() {
@@ -45,9 +43,7 @@ class MainActivity : AppCompatActivity() {
       UserLoginService.loginWithGoogle(this)
     }
     btn_fb_login.setOnClickListener {
-      LoginManager.getInstance()
-          .logInWithReadPermissions(this, Arrays.asList("public_profile",
-              "email"))
+      UserLoginService.loginWithFacebook(this)
     }
 
     createAccount.setOnClickListener {
@@ -65,8 +61,6 @@ class MainActivity : AppCompatActivity() {
     logoutButton.setOnClickListener {
       UserLoginService.logout()
     }
-
-    UserLoginService.logout()
 
     setUserData()
   }
@@ -96,12 +90,14 @@ class MainActivity : AppCompatActivity() {
 
   private fun doOnNext(signal: Signal) {
     if (signal.isError()) {
+      Log.e("LOGIN_ACTIVITY", "signal is error: $signal")
       when (signal.error) {
         is WrongPassword -> showErrorToast(signal.error)
         is EmailAlreadyUsed -> showErrorToast(signal.error)
         is WeakPassword -> showErrorToast(signal.error)
       }
     } else {
+      Log.d("LOGIN_ACTIVITY", "signal is OK: $signal")
       when (signal.status) {
         is UserLogged -> Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
         is AccountCreated -> Toast.makeText(this, "account created", Toast.LENGTH_LONG).show()
@@ -112,16 +108,19 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun showErrorToast(second: FirebaseError?) {
+    Log.d("LOGIN_ACTIVITY", "showErrorToast")
     Toast.makeText(this, second?.message, Toast.LENGTH_LONG).show()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
+    Log.d("LOGIN_ACTIVITY", "onActivityResult")
     super.onActivityResult(requestCode, resultCode, data)
     UserLoginService.handleActivityResult(requestCode, resultCode, data)
   }
 
   override fun onPause() {
     super.onPause()
+    Log.d("LOGIN_ACTIVITY", "onPause")
     subscription.dispose()
   }
 
@@ -131,6 +130,7 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun createSubscription() {
+    Log.d("LOGIN_ACTIVITY", "createSubscription")
     subscription = UserLoginService.observable.subscribe(
         { onNext -> doOnNext(onNext) },
         { onError -> doOnError(onError) }

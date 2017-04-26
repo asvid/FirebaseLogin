@@ -19,15 +19,15 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'
+    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
   }
 }
 
 group = 'asvid.firebaselogin'
-version = '0.0.8'
+version = '0.0.9'
 
 android {
-  //  defaultPublishConfig "debug"
+  defaultPublishConfig "debug"
 
   defaultConfig {
     minSdkVersion 16

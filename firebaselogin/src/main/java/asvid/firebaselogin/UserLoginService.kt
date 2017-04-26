@@ -40,6 +40,7 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import io.reactivex.subjects.PublishSubject
+import java.util.Arrays
 import kotlin.properties.Delegates
 
 object UserLoginService {
@@ -120,6 +121,13 @@ object UserLoginService {
     activity.startActivityForResult(signInIntent, GOOGLE_LOGIN_CODE)
   }
 
+  fun loginWithFacebook(activity: Activity) {
+    checkInit()
+    LoginManager.getInstance()
+        .logInWithReadPermissions(activity, Arrays.asList("public_profile",
+            "email"))
+  }
+
   private fun checkInit() {
     if (!wasInitialized) throw NotInitializedException()
   }
@@ -145,26 +153,34 @@ object UserLoginService {
 
   private fun signWithCredential(credential: AuthCredential) {
     val user = auth.currentUser
-    Logger.d("user name: ${user?.displayName}")
-    Logger.d("user is annonymous: ${user?.isAnonymous}")
-    Logger.d("user providers: ${user?.providers}")
+    Logger.d("currentUser name: ${user?.displayName}")
+    Logger.d("currentUser is annonymous: ${user?.isAnonymous}")
+    Logger.d("currentUser providers: ${user?.providers}")
     Logger.d("current provider: ${credential.provider}")
 
-    if (user?.isAnonymous ?: false && user?.providers?.contains(
-        credential.provider) ?: false) auth.signInWithCredential(
-        credential).addOnCompleteListener { task ->
-      loginTask(task)
-    }
-    else user?.linkWithCredential(credential)?.addOnCompleteListener { task ->
-      loginTask(task)
+    if (user?.isAnonymous ?: false || user?.providers?.contains(
+        credential.provider) ?: true) {
+      Logger.d("signInWithCredential")
+      auth.signInWithCredential(credential).addOnCompleteListener { task ->
+        loginTask(task)
+      }
+    } else {
+      Logger.d("linkWithCredential")
+      user?.linkWithCredential(credential)?.addOnCompleteListener { task ->
+        loginTask(task)
+      }
     }
   }
 
-  private fun loginTask(
-      task: Task<AuthResult>) {
+  private fun loginTask(task: Task<AuthResult>) {
     if (task.isSuccessful) {
       observable.onNext(Signal(status = UserLogged()))
-      Logger.d("loginTask logging succesful")
+      val user = auth.currentUser
+      Logger.d("logging succesful")
+
+      Logger.d("currentUser name: ${user?.displayName}")
+      Logger.d("currentUser is annonymous: ${user?.isAnonymous}")
+      Logger.d("currentUser photo: ${user?.photoUrl}")
     } else {
       when (task.exception) {
         is FirebaseAuthUserCollisionException -> observable.onNext(
@@ -172,7 +188,7 @@ object UserLoginService {
         is FirebaseAuthInvalidCredentialsException -> observable.onNext(
             Signal(error = WrongPassword()))
       }
-      Logger.d("loginTask couldn't log to account")
+      Logger.d("couldn't log to account ${task.exception}")
     }
   }
 
@@ -210,7 +226,7 @@ object UserLoginService {
 
   private fun handleCreateEmailAccountError(email: String, password: String) {
     val currentUser = auth.currentUser
-    if (currentUser?.providers?.contains(EmailAuthProvider.PROVIDER_ID) ?: false) {
+    if (currentUser?.providers?.contains(EmailAuthProvider.PROVIDER_ID) ?: true) {
       observable.onNext(Signal(error = EmailAlreadyUsed()))
     } else {
       val credential = EmailAuthProvider.getCredential(email, password)

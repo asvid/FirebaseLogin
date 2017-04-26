@@ -5,5 +5,5 @@ data class Signal(
     val error: FirebaseError? = null,
     val data: Any? = null) {
 
-  fun isError() = error.let { true }
+  fun isError() = error != null
 }
