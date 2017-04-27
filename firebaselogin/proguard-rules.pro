@@ -34,3 +34,6 @@
     public static *** d(...);
     public static *** v(...);
 }
+
+-keep class asvid.firebaselogin.** { *; }
+-dontwarn asvid.firebaselogin.**
