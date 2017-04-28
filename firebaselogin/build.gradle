@@ -27,7 +27,7 @@ group = 'asvid.firebaselogin'
 version = '0.0.13'
 
 android {
-//  defaultPublishConfig "debug"
+  //  defaultPublishConfig "debug"
 
   defaultConfig {
     minSdkVersion 16
@@ -64,4 +64,16 @@ dependencies {
 
 repositories {
   mavenCentral()
+}
+
+
+task clearJar(type: Delete) {
+  delete 'build/libs/myCompiledLibrary.jar'
+}
+
+task makeJar(type: Copy) {
+  from('build/bundles/release/')
+  into('build/libs/')
+  include('classes.jar')
+  rename('classes.jar', 'myCompiledLibrary.jar')
 }
