@@ -6,7 +6,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import asvid.firebaselogin.signals.AccountCreated
+import asvid.firebaselogin.signals.DeveloperError
 import asvid.firebaselogin.signals.EmailAlreadyUsed
+import asvid.firebaselogin.signals.LoginFailed
 import asvid.firebaselogin.signals.NotInitializedException
 import asvid.firebaselogin.signals.Signal
 import asvid.firebaselogin.signals.UserLogged
@@ -40,6 +42,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import io.reactivex.subjects.PublishSubject
 import java.util.Arrays
+import javax.security.auth.login.LoginException
 import kotlin.properties.Delegates
 
 object UserLoginService {
@@ -96,6 +99,8 @@ object UserLoginService {
         .registerCallback(callbackManager,
             object : FacebookCallback<LoginResult> {
               override fun onError(error: FacebookException?) {
+                Logger.e("Facebook login failed")
+                observable.onNext(Signal(error = LoginFailed()))
               }
 
               override fun onCancel() {
@@ -147,7 +152,15 @@ object UserLoginService {
   private fun handleGoogleLogin(data: Intent) {
     val result = Auth.GoogleSignInApi.getSignInResultFromIntent(data)
     val account = result.signInAccount
-    val credential = GoogleAuthProvider.getCredential(account?.idToken, null)
+    if (account == null) {
+      Logger.e("Google login failed ${result.status}")
+      when (result.status.statusCode) {
+        10 -> observable.onNext(Signal(error = DeveloperError()))
+        else -> observable.onNext(Signal(error = LoginFailed()))
+      }
+      return
+    }
+    val credential = GoogleAuthProvider.getCredential(account.idToken, null)
     signWithCredential(credential)
   }
 

@@ -89,12 +89,14 @@ class MainActivity : AppCompatActivity() {
   }
 
   private fun doOnNext(signal: Signal) {
+    Log.e("LOGIN_ACTIVITY", "signal is: $signal")
     if (signal.isError()) {
       Log.e("LOGIN_ACTIVITY", "signal is error: $signal")
       when (signal.error) {
         is WrongPassword -> showErrorToast(signal.error)
         is EmailAlreadyUsed -> showErrorToast(signal.error)
         is WeakPassword -> showErrorToast(signal.error)
+        else -> showErrorToast(signal.error)
       }
     } else {
       Log.d("LOGIN_ACTIVITY", "signal is OK: $signal")
@@ -114,18 +116,21 @@ class MainActivity : AppCompatActivity() {
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
     Log.d("LOGIN_ACTIVITY", "onActivityResult")
-    super.onActivityResult(requestCode, resultCode, data)
+    Log.d("LOGIN_ACTIVITY", "requestCode " + requestCode)
+    Log.d("LOGIN_ACTIVITY", "resultCode " + resultCode)
+    Log.d("LOGIN_ACTIVITY", "data " + data)
     UserLoginService.handleActivityResult(requestCode, resultCode, data)
+    super.onActivityResult(requestCode, resultCode, data)
   }
 
-  override fun onPause() {
-    super.onPause()
-    Log.d("LOGIN_ACTIVITY", "onPause")
+  override fun onStop() {
+    Log.d("LOGIN_ACTIVITY", "onStop")
     subscription.dispose()
+    super.onStop()
   }
 
-  override fun onResume() {
-    super.onResume()
+  override fun onStart() {
+    super.onStart()
     createSubscription()
   }
 
