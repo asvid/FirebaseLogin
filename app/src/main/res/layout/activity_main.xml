@@ -64,6 +64,37 @@
       >
 
     <Button
+        android:id="@+id/resetPassword"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="reset password"
+        style="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="or"
+        />
+
+    <Button
+        android:id="@+id/resendEmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="resend verification email"
+        style="@style/Widget.AppCompat.Button.ButtonBar.AlertDialog"
+        />
+  </LinearLayout>
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:orientation="horizontal"
+      >
+
+    <Button
         android:id="@+id/googleButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

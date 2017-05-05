@@ -26,6 +26,8 @@ import kotlinx.android.synthetic.main.activity_main.googleButton
 import kotlinx.android.synthetic.main.activity_main.loginWithEmail
 import kotlinx.android.synthetic.main.activity_main.logoutButton
 import kotlinx.android.synthetic.main.activity_main.password
+import kotlinx.android.synthetic.main.activity_main.resendEmail
+import kotlinx.android.synthetic.main.activity_main.resetPassword
 import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity() {
@@ -60,6 +62,14 @@ class MainActivity : AppCompatActivity() {
 
     logoutButton.setOnClickListener {
       UserLoginService.logout()
+    }
+
+    resetPassword.setOnClickListener {
+      UserLoginService.resetPassword(email.text.toString())
+    }
+
+    resendEmail.setOnClickListener {
+      UserLoginService.resendVerificationEmail()
     }
 
     setUserData()
