@@ -7,12 +7,14 @@ import asvid.firebaselogin.signals.Signal
 import io.reactivex.subjects.PublishSubject
 
 class AnonymousProvider(observable: PublishSubject<Signal>) : BaseProvider(observable) {
-  override fun login(activity: Activity?, userCredentials: UserCredentials?) {
-    auth.signInAnonymously().addOnCompleteListener { task ->
-      loginTask(task)
-    }
-  }
+    override fun getProviderId() = ""
 
-  override fun init(defaultWebClientId: String, context: Context) {
-  }
+    override fun login(activity: Activity?, userCredentials: UserCredentials?) {
+        auth.signInAnonymously().addOnCompleteListener { task ->
+            loginTask(task, null)
+        }
+    }
+
+    override fun init(defaultWebClientId: String, context: Context) {
+    }
 }

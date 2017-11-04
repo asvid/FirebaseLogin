@@ -42,6 +42,11 @@ object UserLoginService {
         phoneProvider.login(activity, UserCredentials(phone = phoneNumber))
     }
 
+    fun checkVerificationCode(code: String) {
+        checkInit()
+        phoneProvider.checkVerificationCode(code)
+    }
+
     private fun checkInit() {
         if (!wasInitialized) throw NotInitializedException()
     }

@@ -2,8 +2,10 @@ package asvid.firebaseloginexample
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.widget.EditText
 import android.widget.Toast
 import asvid.firebaselogin.UserLoginService
 import asvid.firebaselogin.signals.*
@@ -88,21 +90,41 @@ class MainActivity : AppCompatActivity() {
         Log.e("LOGIN_ACTIVITY", "signal is: $signal")
         if (signal.isError()) {
             Log.e("LOGIN_ACTIVITY", "signal is error: $signal")
-            when (signal.error) {
-                is WrongPassword -> showErrorToast(signal.error)
-                is EmailAlreadyUsed -> showErrorToast(signal.error)
-                is WeakPassword -> showErrorToast(signal.error)
-                else -> showErrorToast(signal.error)
-            }
+            signal.error?.let { checkError(it) }
         } else {
             Log.d("LOGIN_ACTIVITY", "signal is OK: $signal")
-            when (signal.status) {
-                is UserLogged -> Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
-                is AccountCreated -> Toast.makeText(this, "account created", Toast.LENGTH_LONG).show()
-                is UserLoggedOut -> Toast.makeText(this, "user logged out", Toast.LENGTH_LONG).show()
-            }
+            signal.status?.let { checkStatus(it) }
         }
         setUserData()
+    }
+
+    private fun checkStatus(status: Status): Unit = when (status) {
+        is UserLogged -> Toast.makeText(this, "user logged", Toast.LENGTH_LONG).show()
+        is AccountCreated -> Toast.makeText(this, "account created", Toast.LENGTH_LONG).show()
+        is UserLoggedOut -> Toast.makeText(this, "user logged out", Toast.LENGTH_LONG).show()
+        is ResetPasswordEmailSend -> TODO()
+        is VerificationEmailSend -> TODO()
+        is VerificationCodeSend -> showSmsCodeDialog()
+    }
+
+    private fun showSmsCodeDialog() {
+        val dialog = AlertDialog.Builder(this)
+        dialog.setTitle("provide verification code")
+        dialog.setIcon(R.mipmap.ic_launcher_round)
+
+        val input = EditText(this)
+        dialog.setView(input)
+
+        dialog.setPositiveButton("Submit") { _, _ -> UserLoginService.checkVerificationCode(input.text.toString()) }
+
+        dialog.create().show()
+    }
+
+    private fun checkError(error: FirebaseError): Unit = when (error) {
+        is WrongPassword -> showErrorToast(error)
+        is EmailAlreadyUsed -> showErrorToast(error)
+        is WeakPassword -> showErrorToast(error)
+        else -> showErrorToast(error)
     }
 
     private fun showErrorToast(second: FirebaseError?) {
