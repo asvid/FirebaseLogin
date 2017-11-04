@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import asvid.firebaselogin.Logger
+import asvid.firebaselogin.UserCredentials
 import asvid.firebaselogin.UserLoginService
 import asvid.firebaselogin.signals.LoginFailed
 import asvid.firebaselogin.signals.Signal
@@ -20,14 +21,13 @@ import io.reactivex.subjects.PublishSubject
 import java.util.Arrays
 
 class FacebookProvider(observable: PublishSubject<Signal>) : BaseProvider(observable) {
+    override fun login(activity: Activity?, userCredentials: UserCredentials?) {
+        LoginManager.getInstance()
+                .logInWithReadPermissions(activity, Arrays.asList("public_profile",
+                        "email"))
+    }
 
-  private val callbackManager: CallbackManager = Factory.create()
-
-  override fun login(activity: Activity?, email: String, password: String) {
-    LoginManager.getInstance()
-        .logInWithReadPermissions(activity, Arrays.asList("public_profile",
-            "email"))
-  }
+    private val callbackManager: CallbackManager = Factory.create()
 
   override fun init(defaultWebClientId: String, context: Context) {
     LoginManager.getInstance()
@@ -51,10 +51,9 @@ class FacebookProvider(observable: PublishSubject<Signal>) : BaseProvider(observ
 
 
   private fun setFacebookListener() {
-    val facebookListener = FirebaseAuth.AuthStateListener {
-      //      TODO
-    }
-    auth.addAuthStateListener { facebookListener }
+    auth.addAuthStateListener { FirebaseAuth.AuthStateListener {
+        //      TODO
+    } }
   }
 
   fun handleFacebookAccessToken(token: AccessToken) {

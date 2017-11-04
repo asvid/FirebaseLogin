@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import asvid.firebaselogin.Logger
+import asvid.firebaselogin.UserCredentials
 import asvid.firebaselogin.signals.DeveloperError
 import asvid.firebaselogin.signals.LoginFailed
 import asvid.firebaselogin.signals.Signal
@@ -18,18 +19,17 @@ import io.reactivex.subjects.PublishSubject
 import kotlin.properties.Delegates
 
 
-val GOOGLE_LOGIN_CODE = 123
+const val GOOGLE_LOGIN_CODE = 123
 
 class GoogleProvider(
     observable: PublishSubject<Signal>) : BaseProvider(observable) {
-
-  private var gso: GoogleSignInOptions by Delegates.notNull()
-  private var mGoogleApiClient: GoogleApiClient by Delegates.notNull()
-
-  override fun login(activity: Activity?, email: String, password: String) {
+  override fun login(activity: Activity?, userCredentials: UserCredentials?) {
     val signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient)
     activity?.startActivityForResult(signInIntent, GOOGLE_LOGIN_CODE)
   }
+
+  private var gso: GoogleSignInOptions by Delegates.notNull()
+  private var mGoogleApiClient: GoogleApiClient by Delegates.notNull()
 
   override fun init(defaultWebClientId: String, context: Context) {
     gso = Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).apply {

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.text.TextUtils
 import asvid.firebaselogin.Logger
+import asvid.firebaselogin.UserCredentials
 import asvid.firebaselogin.signals.AccountCreated
 import asvid.firebaselogin.signals.EmailAlreadyUsed
 import asvid.firebaselogin.signals.Signal
@@ -15,12 +16,18 @@ import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import io.reactivex.subjects.PublishSubject
 
 class EmailProvider(observable: PublishSubject<Signal>) : BaseProvider(observable) {
-  override fun login(activity: Activity?, email: String, password: String) {
-    if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) return
-    auth.signInWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-      loginTask(task)
+    override fun login(activity: Activity?, userCredentials: UserCredentials?) {
+        if (TextUtils.isEmpty(userCredentials?.email) || TextUtils.isEmpty(userCredentials?.password)) return
+        if (userCredentials != null) {
+            userCredentials.email?.let {
+                userCredentials.password?.let { it1 ->
+                    auth.signInWithEmailAndPassword(it, it1).addOnCompleteListener { task ->
+                        loginTask(task)
+                    }
+                }
+            }
+        }
     }
-  }
 
   override fun init(defaultWebClientId: String, context: Context) {
 
@@ -51,11 +58,11 @@ class EmailProvider(observable: PublishSubject<Signal>) : BaseProvider(observabl
 
   private fun handleCreateEmailAccountError(email: String, password: String) {
     val currentUser = auth.currentUser
-    if (currentUser?.providers?.contains(EmailAuthProvider.PROVIDER_ID) ?: true) {
+    if (currentUser?.providers?.contains(EmailAuthProvider.PROVIDER_ID) != false) {
       observable.onNext(Signal(error = EmailAlreadyUsed()))
     } else {
       val credential = EmailAuthProvider.getCredential(email, password)
-      currentUser?.linkWithCredential(credential)?.addOnCompleteListener { task ->
+      currentUser.linkWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
       }
     }

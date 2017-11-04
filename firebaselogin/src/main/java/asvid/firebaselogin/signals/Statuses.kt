@@ -1,6 +1,6 @@
 package asvid.firebaselogin.signals
 
-abstract class Status
+sealed class Status
 class UserLogged : Status()
 class AccountCreated : Status()
 class UserLoggedOut : Status()

@@ -3,6 +3,7 @@ package asvid.firebaselogin.providers
 import android.app.Activity
 import android.content.Context
 import asvid.firebaselogin.Logger
+import asvid.firebaselogin.UserCredentials
 import asvid.firebaselogin.signals.EmailAlreadyUsed
 import asvid.firebaselogin.signals.Signal
 import asvid.firebaselogin.signals.UserLogged
@@ -15,14 +16,12 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import io.reactivex.subjects.PublishSubject
 
-abstract class BaseProvider(
-    val observable: PublishSubject<Signal>) {
+abstract class BaseProvider(val observable: PublishSubject<Signal>) {
 
   protected val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
   abstract fun init(defaultWebClientId: String, context: Context)
-  abstract fun login(activity: Activity? = null, email: String = "", password: String = "")
-
+  abstract fun login(activity: Activity?=null, userCredentials:UserCredentials?=null)
 
   protected fun signWithCredential(credential: AuthCredential) {
     val user = auth.currentUser
@@ -31,15 +30,15 @@ abstract class BaseProvider(
     Logger.d("currentUser providers: ${user?.providers}")
     Logger.d("current provider: ${credential.provider}")
 
-    if (user?.isAnonymous ?: false || user?.providers?.contains(
-        credential.provider) ?: true) {
+    if (user?.isAnonymous == true || user?.providers?.contains(
+            credential.provider) != false) {
       Logger.d("signInWithCredential")
       auth.signInWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
       }
     } else {
       Logger.d("linkWithCredential")
-      user?.linkWithCredential(credential)?.addOnCompleteListener { task ->
+      user.linkWithCredential(credential).addOnCompleteListener { task ->
         loginTask(task)
       }
     }
