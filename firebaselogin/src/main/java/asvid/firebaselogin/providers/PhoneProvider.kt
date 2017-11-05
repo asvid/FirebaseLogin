@@ -5,13 +5,14 @@ import android.content.Context
 import android.text.TextUtils
 import asvid.firebaselogin.Logger
 import asvid.firebaselogin.UserCredentials
-import asvid.firebaselogin.signals.AccountCreated
 import asvid.firebaselogin.signals.EmptyPhoneNumber
 import asvid.firebaselogin.signals.Signal
 import asvid.firebaselogin.signals.VerificationCodeSend
 import com.google.firebase.FirebaseException
 import com.google.firebase.FirebaseTooManyRequestsException
-import com.google.firebase.auth.*
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.PhoneAuthCredential
+import com.google.firebase.auth.PhoneAuthProvider
 import io.reactivex.subjects.PublishSubject
 import java.util.concurrent.TimeUnit
 
@@ -29,7 +30,7 @@ class PhoneProvider(observable: PublishSubject<Signal>) : BaseProvider(observabl
 
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {
                 Logger.d("onVerificationCompleted:" + credential)
-                signIn(credential)
+                signWithCredential(credential)
             }
 
             override fun onVerificationFailed(e: FirebaseException) {
@@ -51,24 +52,6 @@ class PhoneProvider(observable: PublishSubject<Signal>) : BaseProvider(observabl
         }
     }
 
-    private fun signIn(credential: PhoneAuthCredential) {
-        FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener { task ->
-            Logger.d("creating finished ${task.isSuccessful}")
-            if (task.isSuccessful) observable.onNext(Signal(status = AccountCreated()))
-            else {
-                Logger.d("creating finished ${task.exception}")
-                when (task.exception) {
-                    is FirebaseAuthUserCollisionException -> handleCreateEmailAccountError(credential)
-                    else -> handleError(task.exception as FirebaseException)
-                }
-            }
-        }
-    }
-
-    private fun handleError(firebaseException: FirebaseException) {
-
-    }
-
     override fun login(activity: Activity?, userCredentials: UserCredentials?) {
         if (activity != null && !TextUtils.isEmpty(userCredentials?.phone)) {
             PhoneAuthProvider.getInstance().verifyPhoneNumber(
@@ -84,6 +67,6 @@ class PhoneProvider(observable: PublishSubject<Signal>) : BaseProvider(observabl
 
     fun checkVerificationCode(code: String) {
         val credential = PhoneAuthProvider.getCredential(mVerificationId, code)
-        credential.let { signIn(it) }
+        credential.let { signWithCredential(it) }
     }
 }

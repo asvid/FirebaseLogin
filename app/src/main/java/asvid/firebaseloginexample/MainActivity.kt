@@ -72,6 +72,8 @@ class MainActivity : AppCompatActivity() {
                 .dontAnimate()
                 .into(avatarImage)
 
+        Log.v("USER", "user: $user")
+
         if (user != null) {
             displayNameTextView.text = user.displayName
         } else {

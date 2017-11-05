@@ -2,18 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'kotlin-android'
 
-ext {
-  kotlin_version = '1.1.1'
-  runnerVersion = "0.5"
-  rulesVersion = "0.5"
-  espressoVersion = "2.2.2"
-  google_services_version = '10.2.1'
-  compileSdkVersion = 25
-  buildToolsVersion = '25'
-  minSdkVersion = 16
-  targetSdkVersion = 25
-}
-
 buildscript {
   repositories {
     jcenter()
@@ -55,7 +43,7 @@ dependencies {
   compile 'com.google.android.gms:play-services-auth:11.4.2'
   compile 'org.jetbrains.kotlin:kotlin-stdlib:1.1.1'
   compile 'io.reactivex.rxjava2:rxjava:2.0.8'
-  compile('com.facebook.android:facebook-android-sdk:4.22.0') {
+  compile('com.facebook.android:facebook-android-sdk:4.27.0') {
     exclude group: 'com.android.support'
     exclude group: 'com.google.firebase:firebase-analytics-impl'
   }
