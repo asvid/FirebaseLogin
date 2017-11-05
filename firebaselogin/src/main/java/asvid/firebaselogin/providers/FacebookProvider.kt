@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import asvid.firebaselogin.Logger
+import asvid.firebaselogin.UserCredentials
 import asvid.firebaselogin.UserLoginService
 import asvid.firebaselogin.signals.LoginFailed
 import asvid.firebaselogin.signals.Signal
@@ -17,52 +18,54 @@ import com.facebook.login.LoginResult
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import io.reactivex.subjects.PublishSubject
-import java.util.Arrays
+import java.util.*
 
 class FacebookProvider(observable: PublishSubject<Signal>) : BaseProvider(observable) {
+    override fun getProviderId() = FacebookAuthProvider.PROVIDER_ID
 
-  private val callbackManager: CallbackManager = Factory.create()
-
-  override fun login(activity: Activity?, email: String, password: String) {
-    LoginManager.getInstance()
-        .logInWithReadPermissions(activity, Arrays.asList("public_profile",
-            "email"))
-  }
-
-  override fun init(defaultWebClientId: String, context: Context) {
-    LoginManager.getInstance()
-        .registerCallback(callbackManager,
-            object : FacebookCallback<LoginResult> {
-              override fun onError(error: FacebookException?) {
-                Logger.e("Facebook login failed")
-                UserLoginService.observable.onNext(Signal(error = LoginFailed()))
-              }
-
-              override fun onCancel() {
-              }
-
-              override fun onSuccess(result: LoginResult) {
-                handleFacebookAccessToken(result.accessToken)
-              }
-            }
-        )
-    setFacebookListener()
-  }
-
-
-  private fun setFacebookListener() {
-    val facebookListener = FirebaseAuth.AuthStateListener {
-      //      TODO
+    override fun login(activity: Activity?, userCredentials: UserCredentials?) {
+        LoginManager.getInstance()
+                .logInWithReadPermissions(activity, Arrays.asList("public_profile",
+                        "email"))
     }
-    auth.addAuthStateListener { facebookListener }
-  }
 
-  fun handleFacebookAccessToken(token: AccessToken) {
-    val credential = FacebookAuthProvider.getCredential(token.token)
-    signWithCredential(credential)
-  }
+    private val callbackManager: CallbackManager = Factory.create()
 
-  fun handleLogin(requestCode: Int, resultCode: Int, data: Intent) {
-    callbackManager.onActivityResult(requestCode, resultCode, data)
-  }
+    override fun init(defaultWebClientId: String, context: Context) {
+        LoginManager.getInstance()
+                .registerCallback(callbackManager,
+                        object : FacebookCallback<LoginResult> {
+                            override fun onError(error: FacebookException?) {
+                                Logger.e("Facebook login failed")
+                                UserLoginService.observable.onNext(Signal(error = LoginFailed()))
+                            }
+
+                            override fun onCancel() {
+                            }
+
+                            override fun onSuccess(result: LoginResult) {
+                                handleFacebookAccessToken(result.accessToken)
+                            }
+                        }
+                )
+        setFacebookListener()
+    }
+
+
+    private fun setFacebookListener() {
+        auth.addAuthStateListener {
+            FirebaseAuth.AuthStateListener {
+                //      TODO
+            }
+        }
+    }
+
+    fun handleFacebookAccessToken(token: AccessToken) {
+        val credential = FacebookAuthProvider.getCredential(token.token)
+        signWithCredential(credential)
+    }
+
+    fun handleLogin(requestCode: Int, resultCode: Int, data: Intent) {
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
 }

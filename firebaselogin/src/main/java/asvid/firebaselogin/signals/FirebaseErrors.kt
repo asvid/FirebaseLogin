@@ -1,6 +1,6 @@
 package asvid.firebaselogin.signals
 
-abstract class FirebaseError(message: String) : Throwable(message)
+sealed class FirebaseError(message: String) : Throwable(message)
 
 class NotInitializedException : FirebaseError("UserLoginService was not initialized before call")
 class WrongPassword : FirebaseError("Provided password is wrong")
@@ -12,3 +12,4 @@ class UserNotLoggedIn : FirebaseError("User not logged, try logging before using
 class DeveloperError : FirebaseError("Check your settings in Firebase Console - possibly SHA keys")
 class VerificationEmailSendingError : FirebaseError("Sending verification email failed")
 class EmptyEmail : FirebaseError("Given email was empty or null")
+class EmptyPhoneNumber : FirebaseError("Given phone number was empty or null")
