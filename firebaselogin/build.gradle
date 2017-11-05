@@ -5,7 +5,6 @@ apply plugin: 'kotlin-android'
 buildscript {
   repositories {
     jcenter()
-    google()
     mavenCentral()
   }
   dependencies {
@@ -14,7 +13,7 @@ buildscript {
 }
 
 group = 'asvid.firebaselogin'
-version = '0.1.0'
+version = '0.2.2'
 
 android {
   //  defaultPublishConfig "debug"
@@ -56,7 +55,6 @@ dependencies {
 repositories {
   mavenCentral()
 }
-
 
 task clearJar(type: Delete) {
   delete 'build/libs/myCompiledLibrary.jar'

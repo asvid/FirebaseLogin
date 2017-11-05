@@ -7,7 +7,7 @@ buildscript {
     jcenter()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.0.0'
+    classpath 'com.android.tools.build:gradle:2.2.3'
     classpath 'org.codehaus.groovy:gradle-groovy-android-plugin:0.3.6'
     classpath 'com.google.gms:google-services:3.0.0'
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
@@ -20,13 +20,15 @@ buildscript {
 allprojects {
   repositories {
     jcenter()
-    google()
     mavenCentral()
     maven {
       url 'http://oss.jfrog.org/artifactory/oss-snapshot-local'
     }
     maven {
       url 'https://maven.fabric.io/public'
+    }
+    maven {
+      url 'https://maven.google.com'
     }
   }
 }
