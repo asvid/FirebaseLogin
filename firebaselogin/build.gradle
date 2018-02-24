@@ -1,68 +1,59 @@
 apply plugin: 'com.android.library'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'kotlin-android'
-
-buildscript {
-  repositories {
-    jcenter()
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
-  }
-}
+apply plugin: 'com.github.dcendents.android-maven'
 
 group = 'asvid.firebaselogin'
-version = '0.2.2'
+version = '0.2.4'
 
 android {
-  //  defaultPublishConfig "debug"
+    //  defaultPublishConfig "debug"
 
-  defaultConfig {
-    minSdkVersion 16
-    targetSdkVersion 27
-    buildToolsVersion = "25"
-    compileSdkVersion = 27
-    versionCode 1
-    versionName "1.0"
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 27
+        buildToolsVersion = "25"
+        compileSdkVersion = 27
+        versionCode 1
+        versionName "1.0"
 
-    testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-  }
-  buildTypes {
-    release {
-      minifyEnabled true
-      proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
-  }
-    buildToolsVersion '26.0.2'
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildToolsVersion '27.0.1'
 }
 
 dependencies {
-  compile fileTree(dir: 'libs', include: ['*.jar'])
-  compile 'com.google.firebase:firebase-core:11.4.2'
-  compile 'com.google.firebase:firebase-auth:11.4.2'
-  compile 'com.google.android.gms:play-services-auth:11.4.2'
-  compile 'org.jetbrains.kotlin:kotlin-stdlib:1.1.1'
-  compile 'io.reactivex.rxjava2:rxjava:2.0.8'
-  compile('com.facebook.android:facebook-android-sdk:4.27.0') {
-    exclude group: 'com.android.support'
-    exclude group: 'com.google.firebase:firebase-analytics-impl'
-  }
-  compile 'com.android.support:appcompat-v7:27.0.0'
-  compile 'com.android.support:cardview-v7:27.0.0'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.google.firebase:firebase-core:11.8.0'
+    api 'com.google.firebase:firebase-auth:11.8.0'
+    implementation 'com.google.android.gms:play-services-auth:11.8.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.2.21'
+    implementation 'io.reactivex.rxjava2:rxjava:2.1.7'
+    implementation('com.facebook.android:facebook-android-sdk:4.27.0') {
+        exclude group: 'com.android.support'
+        exclude group: 'com.google.firebase:firebase-analytics-impl'
+    }
+    implementation 'com.android.support:appcompat-v7:27.0.0'
+    implementation 'com.android.support:cardview-v7:27.0.2'
 }
 
 repositories {
-  mavenCentral()
+    mavenCentral()
 }
 
 task clearJar(type: Delete) {
-  delete 'build/libs/myCompiledLibrary.jar'
+    delete 'build/libs/myCompiledLibrary.jar'
 }
 
 task makeJar(type: Copy) {
-  from('build/bundles/release/')
-  into('build/libs/')
-  include('classes.jar')
-  rename('classes.jar', 'myCompiledLibrary.jar')
+    from('build/bundles/release/')
+    into('build/libs/')
+    include('classes.jar')
+    rename('classes.jar', 'myCompiledLibrary.jar')
 }

@@ -12,11 +12,10 @@ import asvid.firebaselogin.signals.*
 import com.bumptech.glide.Glide
 import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlin.properties.Delegates
 
 class MainActivity : AppCompatActivity() {
 
-    private var subscription: Disposable by Delegates.notNull()
+    private lateinit var subscription: Disposable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
